@@ -1,73 +1,53 @@
 package mx.edu.uacm.torneofutbol;
 
-import mx.edu.uacm.torneofutbol.config.HibernateUtil;
-import mx.edu.uacm.torneofutbol.entities.*;
-import mx.edu.uacm.torneofutbol.repository.*;
-import jakarta.persistence.EntityManager;
-import java.time.LocalDate;
+import mx.edu.uacm.torneofutbol.service.EquipoService;
+import mx.edu.uacm.torneofutbol.service.PosicionService;
 
+/**
+ * Clase principal del sistema de gestión de torneos
+ */
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Probando Repositories JPA...");
+        System.out.println("Iniciando sistema de gestion de torneos de futbol...");
 
-        EntityManager em = null;
         try {
-            em = HibernateUtil.getEntityManager();
-            em.getTransaction().begin();
+            // Inicializar servicios
+            PosicionService posicionService = new PosicionService();
+            EquipoService equipoService = new EquipoService();
 
-            // Crear instancias de repositories
-            EquipoRepository equipoRepo = new EquipoRepositoryImpl();
-            PosicionRepository posicionRepo = new PosicionRepositoryImpl();
-            JugadorRepository jugadorRepo = new JugadorRepositoryImpl();
+            // Cargar datos básicos
+            posicionService.crearPosicionesBasicas();
 
-            // Inyectar EntityManager (simulación simple)
-            ((EquipoRepositoryImpl) equipoRepo).setEntityManager(em);
-            ((PosicionRepositoryImpl) posicionRepo).setEntityManager(em);
-            ((JugadorRepositoryImpl) jugadorRepo).setEntityManager(em);
+            // Demo del sistema
+            demoGestionEquipos(equipoService);
+            demoGestionPosiciones(posicionService);
 
-            // Probar creación de posiciones
-            Posicion portero = new Posicion("Portero");
-            Posicion defensa = new Posicion("Defensa");
-            Posicion medio = new Posicion("Medio");
-            Posicion delantero = new Posicion("Delantero");
-
-            posicionRepo.guardar(portero);
-            posicionRepo.guardar(defensa);
-            posicionRepo.guardar(medio);
-            posicionRepo.guardar(delantero);
-
-            System.out.println("Posiciones creadas: " + posicionRepo.obtenerTodos().size());
-
-            // Probar creación de equipo
-            Equipo equipo1 = new Equipo("Equipo A");
-            equipoRepo.guardar(equipo1);
-
-            System.out.println("Equipo creado: " + equipo1.getNombre());
-
-            // Probar creación de jugador
-            Jugador jugador1 = new Jugador("Jugador 1", LocalDate.of(1990, 1, 1));
-            jugador1.setEquipo(equipo1);
-            jugador1.agregarPosicion(delantero);
-            jugadorRepo.guardar(jugador1);
-
-            System.out.println("Jugador creado: " + jugador1.getNombre());
-            System.out.println("Total equipos: " + equipoRepo.obtenerTodos().size());
-            System.out.println("Total jugadores: " + jugadorRepo.obtenerTodos().size());
-
-            em.getTransaction().commit();
-            System.out.println("Prueba de repositories completada exitosamente");
+            System.out.println("Sistema iniciado correctamente");
 
         } catch (Exception e) {
-            if (em != null && em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
-            System.err.println("Error: " + e.getMessage());
+            System.err.println("Error iniciando sistema: " + e.getMessage());
             e.printStackTrace();
         } finally {
-            if (em != null && em.isOpen()) {
-                em.close();
-            }
-            HibernateUtil.shutdown();
+            mx.edu.uacm.torneofutbol.config.HibernateUtil.shutdown();
+        }
+    }
+
+    private static void demoGestionEquipos(EquipoService equipoService) {
+        var equipos = equipoService.obtenerTodosEquipos();
+        System.out.println("Equipos en sistema: " + equipos.size());
+
+        if (equipos.isEmpty()) {
+            var equipo = equipoService.crearEquipo("Equipo Demo");
+            System.out.println("Equipo demo creado: " + equipo.getNombre());
+        }
+    }
+
+    private static void demoGestionPosiciones(PosicionService posicionService) {
+        var posiciones = posicionService.obtenerTodasPosiciones();
+        System.out.println("Posiciones disponibles: " + posiciones.size());
+
+        for (var posicion : posiciones) {
+            System.out.println(" - " + posicion.getNombre());
         }
     }
 }

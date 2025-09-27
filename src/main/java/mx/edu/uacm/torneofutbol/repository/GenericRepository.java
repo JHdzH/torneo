@@ -1,5 +1,6 @@
 package mx.edu.uacm.torneofutbol.repository;
 
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,4 +24,7 @@ public interface GenericRepository<T, ID> {
 
     // Verificar si existe por ID
     boolean existePorId(ID id);
+
+    // Método para inyectar EntityManager
+    void setEntityManager(EntityManager entityManager);
 }

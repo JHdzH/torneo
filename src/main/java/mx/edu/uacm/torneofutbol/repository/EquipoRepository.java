@@ -1,6 +1,5 @@
 package mx.edu.uacm.torneofutbol.repository;
 
-
 import mx.edu.uacm.torneofutbol.entities.Equipo;
 import java.util.Optional;
 
