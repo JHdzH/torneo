@@ -2,34 +2,60 @@ package mx.edu.uacm.torneofutbol;
 
 import mx.edu.uacm.torneofutbol.config.HibernateUtil;
 import mx.edu.uacm.torneofutbol.entities.*;
+import mx.edu.uacm.torneofutbol.repository.*;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDate;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("🚀 Probando entidades JPA...");
+        System.out.println("Probando Repositories JPA...");
 
         EntityManager em = null;
         try {
             em = HibernateUtil.getEntityManager();
-            System.out.println("Conexión JPA establecida correctamente");
-
-            // Iniciar transacción para pruebas
             em.getTransaction().begin();
 
-            // Probar que las entidades están mapeadas correctamente
-            System.out.println("Entidades mapeadas:");
-            System.out.println(" " + em.getMetamodel().entity(Equipo.class));
-            System.out.println(" " + em.getMetamodel().entity(Jugador.class));
-            System.out.println(" " + em.getMetamodel().entity(Partido.class));
-            System.out.println(" " + em.getMetamodel().entity(Posicion.class));
-            System.out.println(" " + em.getMetamodel().entity(Gol.class));
+            // Crear instancias de repositories
+            EquipoRepository equipoRepo = new EquipoRepositoryImpl();
+            PosicionRepository posicionRepo = new PosicionRepositoryImpl();
+            JugadorRepository jugadorRepo = new JugadorRepositoryImpl();
 
-            // Probar una consulta simple
-            Long count = em.createQuery("SELECT COUNT(e) FROM Equipo e", Long.class).getSingleResult();
-            System.out.println("Equipos en base de datos: " + count);
+            // Inyectar EntityManager (simulación simple)
+            ((EquipoRepositoryImpl) equipoRepo).setEntityManager(em);
+            ((PosicionRepositoryImpl) posicionRepo).setEntityManager(em);
+            ((JugadorRepositoryImpl) jugadorRepo).setEntityManager(em);
+
+            // Probar creación de posiciones
+            Posicion portero = new Posicion("Portero");
+            Posicion defensa = new Posicion("Defensa");
+            Posicion medio = new Posicion("Medio");
+            Posicion delantero = new Posicion("Delantero");
+
+            posicionRepo.guardar(portero);
+            posicionRepo.guardar(defensa);
+            posicionRepo.guardar(medio);
+            posicionRepo.guardar(delantero);
+
+            System.out.println("Posiciones creadas: " + posicionRepo.obtenerTodos().size());
+
+            // Probar creación de equipo
+            Equipo equipo1 = new Equipo("Equipo A");
+            equipoRepo.guardar(equipo1);
+
+            System.out.println("Equipo creado: " + equipo1.getNombre());
+
+            // Probar creación de jugador
+            Jugador jugador1 = new Jugador("Jugador 1", LocalDate.of(1990, 1, 1));
+            jugador1.setEquipo(equipo1);
+            jugador1.agregarPosicion(delantero);
+            jugadorRepo.guardar(jugador1);
+
+            System.out.println("Jugador creado: " + jugador1.getNombre());
+            System.out.println("Total equipos: " + equipoRepo.obtenerTodos().size());
+            System.out.println("Total jugadores: " + jugadorRepo.obtenerTodos().size());
 
             em.getTransaction().commit();
-            System.out.println("Prueba completada exitosamente");
+            System.out.println("Prueba de repositories completada exitosamente");
 
         } catch (Exception e) {
             if (em != null && em.getTransaction().isActive()) {
